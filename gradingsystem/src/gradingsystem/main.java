@@ -7,6 +7,7 @@ package gradingsystem;
 import java.awt.Image;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -21,6 +22,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.sql.Statement;
 import java.sql.* ;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import javax.swing.table.DefaultTableModel;
 /**
  *
@@ -43,7 +45,7 @@ public class main extends javax.swing.JFrame {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
                con=DriverManager.getConnection("jdbc:mysql://localhost:3306/products","root","kpaul57285.");
-              JOptionPane.showMessageDialog(null,"Connected");
+          
               return con;
             
           
@@ -51,12 +53,12 @@ public class main extends javax.swing.JFrame {
              
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(main.class.getName()).log(Level.SEVERE, null, ex);
-            JOptionPane.showMessageDialog(null,"Connected");
+           
             return null;
       
         } catch (SQLException ex) {
             Logger.getLogger(main.class.getName()).log(Level.SEVERE, null, ex);
-            JOptionPane.showMessageDialog(null,"Not Connected");
+       
             return null;
       
         }    
@@ -94,6 +96,28 @@ public class main extends javax.swing.JFrame {
         ImageIcon image= new ImageIcon(img2);
         return image;
     }
+    public ArrayList<product> getProductList() {
+        ArrayList<product> productlist= new ArrayList<product>();
+            Connection con= createConnection();
+            Statement ps;
+            ResultSet rs;
+        try {
+           
+            ps = con.createStatement();
+            rs= ps.executeQuery("select * from product");
+            
+            while(rs.next()){
+              product   product1 = new product(rs.getInt("id"),rs.getString("name"),Float.parseFloat("price"),rs.getString("adddate"),rs.getBytes("image"));
+              productlist.add(product1);  
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return productlist;
+        
+    } 
+    
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -128,6 +152,8 @@ public class main extends javax.swing.JFrame {
         tfdate = new com.toedter.calendar.JDateChooser();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jPanel1.setBackground(new java.awt.Color(255, 204, 204));
 
         jLabel1.setText("ID:");
 
@@ -258,14 +284,14 @@ public class main extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(33, 33, 33)
+                        .addGap(47, 47, 47)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel1)
-                            .addComponent(tfid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(26, 26, 26)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel2)
-                            .addComponent(tfname, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(tfid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel1))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(tfname, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel2))
                         .addGap(4, 4, 4)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel3)
@@ -324,6 +350,7 @@ public class main extends javax.swing.JFrame {
            File selectedFile= file.getSelectedFile();
            String path = selectedFile.getAbsolutePath();
            tfimg.setIcon(ResizeImage(path,null));
+           Imgpath=path;
            
        }
        else{
@@ -339,16 +366,17 @@ public class main extends javax.swing.JFrame {
            PreparedStatement ps=null;
           
             try {
-                ps = con.prepareStatement("insert into products(name,price,adddate,image) "+"values(?,?,?,?)");
-                ps.setString(1, tfname.getText());
-                ps.setString(2, tfprice.getText());
+                ps = con.prepareStatement("insert into product(id,name,price,adddate,image) "+"values(?,?,?,?,?)");
+                ps.setString(1,tfid.getText());
+                ps.setString(2, tfname.getText());
+                ps.setString(3, tfprice.getText());
                 SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd");
                 String adddate =dateformat.format(tfdate.getDate());
-                ps.setString(3, adddate);
+                ps.setString(4, adddate);
                
                 
                 InputStream img = new FileInputStream(new File(Imgpath));
-                ps.setBlob(4,img);
+                ps.setBlob(5,img);
                 ps.executeUpdate();
                 JOptionPane.showMessageDialog(null,"Data Inserted");
                 
@@ -361,14 +389,89 @@ public class main extends javax.swing.JFrame {
              JOptionPane.showMessageDialog(null,"One or More Field");
             
         }
+        
+        System.out.println("Name=> "+ tfname.getText());
+         System.out.println("Price=> "+ tfprice.getText());
+          System.out.println("Image=> "+ Imgpath);
     }//GEN-LAST:event_insertbuttonActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        // TODO add your handling code here:
+     if(checkInput() && tfid.getText() != null){
+         
+     
+          PreparedStatement ps= null;
+          Connection con=createConnection();
+        
+          if (Imgpath==null){
+         try {
+             ps =con.prepareStatement("update product set name = ? , price=? "+",adddate=? where id = ?");
+             ps.setString(1, tfname.getText());
+             ps.setString(2, tfprice.getText());
+         
+              SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd");
+                String adddate =dateformat.format(tfdate.getDate());
+                ps.setString(3, adddate);
+                ps.setInt(4, Integer.parseInt(tfid.getText()));
+                ps.executeUpdate();
+                
+               JOptionPane.showMessageDialog(null,"Update Succesfull");
+               
+         
+         } catch (SQLException ex) {
+             Logger.getLogger(main.class.getName()).log(Level.SEVERE, null, ex);
+         }
+              
+          }
+          else{
+         try {
+             InputStream img= new FileInputStream(new File(Imgpath));
+             ps =con.prepareStatement("update product set name = ? , price=? "+",adddate=?,image=? where id = ?");
+             ps.setString(1, tfname.getText());
+             ps.setString(2, tfprice.getText());
+             ps.setBlob(4, img);
+         
+              SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd");
+                String adddate =dateformat.format(tfdate.getDate());
+                ps.setString(3, adddate);
+                ps.setInt(5, Integer.parseInt(tfid.getText()));   
+                ps.executeUpdate();
+                     } 
+         catch (Exception ex) {
+             JOptionPane.showMessageDialog(null,ex.getMessage());
+         }
+
+              
+          }
+          
+     }
+     else{
+         JOptionPane.showMessageDialog(null,"One or More Fields are empty or wrong");
+     }
+          
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        // TODO add your handling code here:
+        if(!tfid.getText().equals("")){
+            try{
+            Connection con=createConnection();
+            PreparedStatement ps= null;
+            ps = con.prepareStatement("delete from product  where id=?");
+             ps.setInt(1, Integer.parseInt(tfid.getText())); 
+            ps.executeUpdate();
+            JOptionPane.showMessageDialog(null, "Product Deleted");
+            
+            }
+            catch(Exception ex){
+                 Logger.getLogger(main.class.getName()).log(Level.SEVERE, null, ex);
+                JOptionPane.showMessageDialog(null, "Product not Deleted");
+                
+                
+            }
+            
+        }
+        else{
+            JOptionPane.showMessageDialog(null, "Product not Deleted|No ID to delete");
+        }
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
