@@ -36,6 +36,7 @@ public class main extends javax.swing.JFrame {
     public main() {
         initComponents();
         createConnection();
+        Show_Products_In_JTable();
        
     }
     String Imgpath=null;
@@ -107,7 +108,7 @@ public class main extends javax.swing.JFrame {
             rs= ps.executeQuery("select * from product");
             
             while(rs.next()){
-              product   product1 = new product(rs.getInt("id"),rs.getString("name"),Float.parseFloat("price"),rs.getString("adddate"),rs.getBytes("image"));
+              product   product1 = new product(rs.getInt("id"),rs.getString("name"),Float.parseFloat(rs.getString("price")),rs.getString("adddate"),rs.getBytes("image"));
               productlist.add(product1);  
             }
         } catch (SQLException ex) {
@@ -116,6 +117,24 @@ public class main extends javax.swing.JFrame {
         return productlist;
         
     } 
+    
+    public void Show_Products_In_JTable(){
+        ArrayList<product> list = getProductList();
+        DefaultTableModel model=(DefaultTableModel)Jtable.getModel();
+        
+        Object[] row = new Object[4];
+        for(int i =0;i<list.size();i++){
+        row[0] = list.get(i).getId();
+        row[1] = list.get(i).getName();
+        row[2] = list.get(i).getPrice();
+        row[3] = list.get(i).getadddate();
+        
+        model.addRow(row);
+        
+    }
+        
+        
+    }
     
     
 
@@ -139,7 +158,7 @@ public class main extends javax.swing.JFrame {
         tfprice = new javax.swing.JTextField();
         tfid = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        Jtable = new javax.swing.JTable();
         imgbutton = new javax.swing.JButton();
         insertbutton = new javax.swing.JButton();
         jButton3 = new javax.swing.JButton();
@@ -177,7 +196,7 @@ public class main extends javax.swing.JFrame {
             }
         });
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        Jtable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
@@ -185,8 +204,9 @@ public class main extends javax.swing.JFrame {
                 "ID", "Name", "Price", "AddDate"
             }
         ));
-        jScrollPane1.setViewportView(jTable1);
+        jScrollPane1.setViewportView(Jtable);
 
+        imgbutton.setBackground(new java.awt.Color(204, 255, 204));
         imgbutton.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         imgbutton.setText("Choose Image");
         imgbutton.addActionListener(new java.awt.event.ActionListener() {
@@ -195,6 +215,7 @@ public class main extends javax.swing.JFrame {
             }
         });
 
+        insertbutton.setBackground(new java.awt.Color(204, 255, 204));
         insertbutton.setText("Insert");
         insertbutton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -202,6 +223,7 @@ public class main extends javax.swing.JFrame {
             }
         });
 
+        jButton3.setBackground(new java.awt.Color(153, 153, 255));
         jButton3.setText("Update");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -209,6 +231,7 @@ public class main extends javax.swing.JFrame {
             }
         });
 
+        jButton4.setBackground(new java.awt.Color(255, 102, 102));
         jButton4.setText("Delete");
         jButton4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -216,12 +239,16 @@ public class main extends javax.swing.JFrame {
             }
         });
 
+        jButton5.setBackground(new java.awt.Color(204, 255, 204));
         jButton5.setText("First");
 
+        jButton6.setBackground(new java.awt.Color(255, 153, 153));
         jButton6.setText("Next");
 
+        jButton7.setBackground(new java.awt.Color(204, 255, 204));
         jButton7.setText("Previous");
 
+        jButton8.setBackground(new java.awt.Color(255, 153, 153));
         jButton8.setText("Last");
         jButton8.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -379,6 +406,7 @@ public class main extends javax.swing.JFrame {
                 ps.setBlob(5,img);
                 ps.executeUpdate();
                 JOptionPane.showMessageDialog(null,"Data Inserted");
+                Show_Products_In_JTable();
                 
             } catch (Exception ex) {
                JOptionPane.showMessageDialog(null,ex.getMessage());
@@ -460,6 +488,7 @@ public class main extends javax.swing.JFrame {
             ps.executeUpdate();
             JOptionPane.showMessageDialog(null, "Product Deleted");
             
+            
             }
             catch(Exception ex){
                  Logger.getLogger(main.class.getName()).log(Level.SEVERE, null, ex);
@@ -523,6 +552,7 @@ public class main extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTable Jtable;
     private javax.swing.JButton imgbutton;
     private javax.swing.JButton insertbutton;
     private javax.swing.JButton jButton3;
@@ -539,7 +569,6 @@ public class main extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
     private com.toedter.calendar.JDateChooser tfdate;
     private javax.swing.JTextField tfid;
     private javax.swing.JLabel tfimg;
